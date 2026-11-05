@@ -49,12 +49,16 @@ export async function coletarTriagem({
   const apiBase = `${origin}/pje-comum-api/api`;
   const controle = { limite: config.CONCORRENCIA };
 
-  async function requisitar(caminho, { metodo = 'GET', corpo = null, tentativas = config.TENTATIVAS } = {}) {
+  async function requisitar(caminho, {
+    metodo = 'GET', corpo = null, tentativas = config.TENTATIVAS,
+    tempoLimite = config.TEMPO_LIMITE_REQUISICAO_MS, aoTentar = null
+  } = {}) {
     let ultimoErro = null;
     for (let t = 0; t <= tentativas; t++) {
       if (t > 0) await esperar(config.ESPERA_BASE_MS * 2 ** (t - 1));
+      if (aoTentar) aoTentar(t + 1, ultimoErro);
       const abort = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const timer = abort ? setTimeout(() => abort.abort(), config.TEMPO_LIMITE_REQUISICAO_MS) : null;
+      const timer = abort ? setTimeout(() => abort.abort(), tempoLimite) : null;
       try {
         const headers = { 'X-XSRF-TOKEN': xsrf };
         if (corpo) headers['Content-Type'] = 'application/json';
@@ -85,14 +89,27 @@ export async function coletarTriagem({
   }
 
   // 1. Listagem (1ª página, depois as demais em paralelo)
-  aoProgresso({ fase: 'listagem', feitos: 0, total: 0 });
+  const lista = { paginasLidas: 0, qtdPaginas: 0, tentativa: 1, erro: null };
+  const avisarLista = () => aoProgresso({ fase: 'listagem', feitos: 0, total: 0, ...lista });
+  avisarLista();
   const caminhoLista = `/agrupamentotarefas/${config.AGRUPAMENTO_TRIAGEM}/processos`;
-  const listar = pagina => requisitar(caminhoLista, {
-    metodo: 'PATCH', corpo: corpoListagem(pagina, config.TAMANHO_PAGINA_LISTAGEM)
-  });
+  const listar = async pagina => {
+    const r = await requisitar(caminhoLista, {
+      metodo: 'PATCH', corpo: corpoListagem(pagina, config.TAMANHO_PAGINA_LISTAGEM),
+      tempoLimite: config.TEMPO_LIMITE_LISTAGEM_MS || config.TEMPO_LIMITE_REQUISICAO_MS,
+      aoTentar: (n, erro) => {
+        if (n > 1) { lista.tentativa = Math.max(lista.tentativa, n); lista.erro = String((erro && erro.message) || erro || ''); avisarLista(); }
+      }
+    });
+    lista.paginasLidas++;
+    avisarLista();
+    return r;
+  };
   const primeira = await listar(1);
   const paginas = [primeira];
   const qtdPaginas = primeira.qtdPaginas || 1;
+  lista.qtdPaginas = qtdPaginas;
+  avisarLista();
   if (qtdPaginas > 1) {
     const resto = await Promise.all(Array.from({ length: qtdPaginas - 1 }, (_, i) => listar(i + 2)));
     paginas.push(...resto);

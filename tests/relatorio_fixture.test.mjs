@@ -30,7 +30,9 @@ test('PDF completo a partir da amostra real de 322 processos', { skip: SEM_DADOS
 
   assert.equal(rel.nomeArquivo, 'relatorio_triagem_TRT2_9T-4C_2026-11-04_14h32.pdf');
   assert.equal(rel.fichas.length, 322);
-  assert.equal(rel.indice.length, 322);
+  assert.equal(rel.indice, undefined, 'índice por CNJ foi retirado');
+  assert.equal(rel.numeros, undefined, 'resumo em números foi retirado');
+  assert.ok(rel.reclamadas.every(r => r.processos.length > 1), 'só reclamadas com 2+ processos');
   assert.equal(rel.naoLidos.length, 1);
 
   // Ordem por entrada na triagem
@@ -70,6 +72,6 @@ test('PDF completo a partir da amostra real de 322 processos', { skip: SEM_DADOS
   const bruto = bytes.toString('latin1');
   assert.ok(doc.getNumberOfPages() > 20, 'PDF curto demais');
   assert.match(bruto, /\/Outlines/, 'sem marcadores');
-  assert.ok((bruto.match(/\/Subtype \/Link/g) || []).length > 322, 'links internos insuficientes');
+  assert.ok((bruto.match(/\/Subtype \/Link/g) || []).length > 100, 'links internos insuficientes');
   console.log(`PDF: ${SAIDA_PDF || '(só em memória)'} (${doc.getNumberOfPages()} páginas, ${(bytes.length / 1024).toFixed(0)} KB)`);
 });

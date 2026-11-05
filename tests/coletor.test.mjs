@@ -97,3 +97,13 @@ test('nenhum sem responsável: entra a caixa inteira', async () => {
   assert.equal(r.totalSelecionados, 3);
   assert.match(r.criterio, /todos/);
 });
+
+test('lista que falha é tentada de novo e o progresso informa a tentativa', async () => {
+  const { fetchFn } = pjeFalso({ '/agrupamentotarefas/12/processos': [resposta(502, {})] });
+  const eventos = [];
+  const r = await coletarTriagem(base({ fetchFn, aoProgresso: p => eventos.push(p) }));
+  assert.equal(r.totalNaCaixa, 3);
+  const lista = eventos.filter(e => e.fase === 'listagem');
+  assert.ok(lista.some(e => e.tentativa === 2 && /502/.test(e.erro)), 'deveria avisar a 2ª tentativa');
+  assert.ok(lista.some(e => e.qtdPaginas === 2 && e.paginasLidas === 2), 'deveria contar as páginas lidas');
+});

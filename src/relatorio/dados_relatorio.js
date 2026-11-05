@@ -177,17 +177,8 @@ export function montarRelatorio({ processos, naoLidos = [], meta }) {
   const fazenda = ordenados.filter(fazendaSemMpt);
   const fisicos = ordenados.filter(p => p.temporalidade && p.temporalidade.ehProcessoFisicoMigrado);
   const comSindicato = ordenados.filter(p => p.sindicatos && p.sindicatos.temSindicato);
-  const segredo = ordenados.filter(ehSegredo);
   const reclamadas = agruparPorReclamada(publicos);
 
-  const porClasse = new Map();
-  for (const p of ordenados) {
-    const sigla = (p.classe && p.classe.sigla) || 'OUTROS';
-    if (!porClasse.has(sigla)) porClasse.set(sigla, { sigla, descricao: (p.classe && p.classe.nome) || '', qtd: 0 });
-    porClasse.get(sigla).qtd++;
-  }
-
-  const contar = rota => ordenados.filter(p => p.classe && p.classe.rota === rota).length;
   const descricoesOJ = ordenados.map(descricaoOJ);
   const ojs = Array.from(new Set(descricoesOJ.filter(Boolean)));
 
@@ -206,21 +197,6 @@ export function montarRelatorio({ processos, naoLidos = [], meta }) {
       versao: meta.versao || '',
       segundos: meta.segundos
     },
-    numeros: [
-      ['Total de processos no relatório', ordenados.length],
-      ['Fase de conhecimento', contar(ROTA_TRIAGEM.CONHECIMENTO)],
-      ['Fase de execução', contar(ROTA_TRIAGEM.EXECUCAO)],
-      ['Fazenda Pública (total)', ordenados.filter(p => p.pjs && p.pjs.temFazendaPublica).length],
-      ['Fazenda Pública sem MPT', fazenda.length],
-      ['Com sindicato', comSindicato.length],
-      ['Processos físicos migrados', fisicos.length],
-      ['Em segredo de justiça', segredo.length],
-      ['Reclamadas distintas', reclamadas.length],
-      ['Lotes (mesma reclamada + mesmo advogado)', lotes.length],
-      ['Processos em algum lote', lotesPorCnj.size],
-      ['Processos não lidos', naoLidos.length]
-    ],
-    porClasse: Array.from(porClasse.values()).sort((a, b) => b.qtd - a.qtd || a.sigla.localeCompare(b.sigla)),
     fazendaSemMpt: fazenda.map(p => Object.assign(linhaProcesso(p), {
       extra: ['Ente público', ehSegredo(p) ? SEGREDO : (p.pjs.entesFazenda || []).map(e => limpar(e.nome)).join('; ') || 'não identificado']
     })),
@@ -230,14 +206,12 @@ export function montarRelatorio({ processos, naoLidos = [], meta }) {
     sindicatos: comSindicato.map(p => Object.assign(linhaProcesso(p), {
       extra: ['Sindicato', p.sindicatos.sindicatos.map(s => `${nomeParte(p, s.nome)} (${textoPolo(s.polo)})`).join('; ')]
     })),
+    // Só reclamadas com 2+ processos (as de processo único não ajudavam na triagem).
     reclamadas: reclamadas.filter(r => r.processos.length > 1).map(r => ({
       nome: r.nome,
       cnpjs: r.cnpjs,
       processos: porOrdem(r.processos).map(linhaProcesso)
     })),
-    reclamadasUnicas: reclamadas.filter(r => r.processos.length === 1)
-      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-      .map(r => ({ nome: r.nome, cnpjs: r.cnpjs, processo: linhaProcesso(r.processos[0]) })),
     lotes: lotes.map(l => ({
       numero: l.numero,
       reclamadas: l.reclamadas,
@@ -245,8 +219,6 @@ export function montarRelatorio({ processos, naoLidos = [], meta }) {
       processos: porOrdem(l.processos).map(linhaProcesso)
     })),
     fichas: ordenados.map(p => montarFicha(p, lotesPorCnj.get(p.cnj) || [])),
-    indice: ordenados.map(p => ({ cnj: p.cnj, ordem: p._ordem }))
-      .sort((a, b) => String(a.cnj).localeCompare(String(b.cnj))),
     naoLidos: naoLidos.map(f => ({ cnj: f.cnj || String(f.idProcesso || ''), motivo: limpar(f.motivo) }))
   };
 }

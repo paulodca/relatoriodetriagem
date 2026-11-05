@@ -201,8 +201,7 @@ export function gerarPdf(rel, JsPDF) {
   e.espaco(1);
   [
     'O sumário (página 2) e os marcadores na barra lateral do leitor de PDF levam a cada seção.',
-    'Cada processo tem um "Nº de ordem" (ordem de entrada na triagem). Nas listagens, clique no Nº de ordem para abrir a ficha completa do processo.',
-    'O índice no fim lista todos os processos por número CNJ, com link para a ficha.',
+    'Cada processo tem um "Nº de ordem" (ordem de entrada na triagem). Nas listagens, clique na linha do processo para abrir a ficha completa. Para achar um CNJ específico, use a busca do leitor de PDF (Ctrl+F).',
     'Um mesmo processo aparece em todas as seções a que pertence. O PDF pode ser enviado a uma IA para outras análises.',
     'Dados pessoais (CPF, e-mail, telefone, endereço) foram descartados. Em segredo de justiça, as partes aparecem como "SEGREDO DE JUSTIÇA".'
   ].forEach(t => e.texto('- ' + t, { tam: 9.5, recuo: 2 }));
@@ -210,14 +209,6 @@ export function gerarPdf(rel, JsPDF) {
   // 2. Sumário (preenchido no fim)
   e.novaPagina();
   const paginaSumario = e.pagina;
-
-  // 3. Resumo em números
-  abrirSecao('Resumo em números');
-  for (const [r, v] of rel.numeros) e.campo(r, String(v), { tam: 10 });
-  e.espaco(5);
-  e.texto('Processos por classe', { tam: 11, estilo: 'bold' });
-  e.espaco(1);
-  for (const cl of rel.porClasse) e.campo(cl.sigla + (cl.descricao ? ` - ${cl.descricao}` : ''), String(cl.qtd), { tam: 9.5 });
 
   // 4. Fazenda sem MPT
   abrirSecao(`Fazenda Pública sem MPT (${rel.fazendaSemMpt.length})`);
@@ -239,10 +230,10 @@ export function gerarPdf(rel, JsPDF) {
   for (const lp of rel.sindicatos) escreverLinhaProcesso(lp, [['Partes', lp.partes], lp.extra]);
 
   // 7. Por reclamada
-  abrirSecao(`Listagem por reclamada (${rel.reclamadas.length + rel.reclamadasUnicas.length})`);
-  e.texto('Empresas e entes nos polos ativo ou passivo, com todos os seus processos. Quem tem mais processos vem primeiro; no fim, as reclamadas com um único processo, em ordem alfabética. Processos em segredo de justiça não entram nesta seção.', { tam: 9, cor: COR_SUAVE });
+  abrirSecao(`Listagem por reclamada (${rel.reclamadas.length})`);
+  e.texto('Empresas e entes nos polos ativo ou passivo, com todos os seus processos. Só reclamadas com 2 ou mais processos; quem tem mais vem primeiro. Processos em segredo de justiça não entram nesta seção.', { tam: 9, cor: COR_SUAVE });
   e.espaco(2);
-  if (!rel.reclamadas.length && !rel.reclamadasUnicas.length) listaVazia('Nenhuma reclamada identificada.');
+  if (!rel.reclamadas.length) listaVazia('Nenhuma reclamada com mais de um processo.');
   for (const r of rel.reclamadas) {
     e.garantir(alturaLinha(10) * 3);
     e.texto(`RECLAMADA: ${r.nome}`, { tam: 10, estilo: 'bold', cor: COR_TITULO });
@@ -251,17 +242,6 @@ export function gerarPdf(rel, JsPDF) {
     for (const lp of r.processos) escreverLinhaProcesso(lp, [['Reclamante', lp.reclamante]]);
     e.espaco(2);
   }
-  if (rel.reclamadasUnicas.length) {
-    e.espaco(2);
-    e.garantir(alturaLinha(10) * 3);
-    e.texto(`RECLAMADAS COM UM ÚNICO PROCESSO (${rel.reclamadasUnicas.length})`, { tam: 10, estilo: 'bold', cor: COR_TITULO });
-    e.espaco(1);
-    for (const r of rel.reclamadasUnicas) {
-      const cnpj = r.cnpjs.length ? ` (CNPJ ${r.cnpjs.join(', ')})` : '';
-      escreverLinhaProcesso(r.processo, [['Reclamante', r.processo.reclamante]], { prefixo: `Reclamada: ${r.nome}${cnpj}` });
-    }
-  }
-
   // 8. Lotes
   abrirSecao(`Lotes: mesma reclamada + mesmo advogado (${rel.lotes.length})`);
   e.texto('Dois ou mais processos com a mesma reclamada e o mesmo cadastro de OAB do lado do trabalhador. O nome do advogado não é exibido.', { tam: 9, cor: COR_SUAVE });
@@ -293,32 +273,6 @@ export function gerarPdf(rel, JsPDF) {
     e.espaco(2);
     e.linhaHorizontal();
     e.espaco(3);
-  }
-
-  // 10. Índice por CNJ (2 colunas, link para a ficha)
-  abrirSecao(`Índice por número de processo (${rel.indice.length})`);
-  {
-    const tam = 8.5;
-    const lh = alturaLinha(tam) + 0.6;
-    const larguraColuna = (LARGURA_UTIL - 6) / 2;
-    let coluna = 0;
-    const yInicio = () => e.y;
-    let y0 = yInicio();
-    let y = y0;
-    e.fonte(tam);
-    for (const it of rel.indice) {
-      if (y + lh > BASE) {
-        if (coluna === 0) { coluna = 1; y = y0; }
-        else { e.novaPagina(); e.fonte(tam); coluna = 0; y0 = e.y; y = y0; }
-      }
-      const x = MARGEM_X + coluna * (larguraColuna + 6);
-      const pag = paginaFicha.get(it.ordem);
-      const linha = `${it.cnj} - Nº de ordem ${it.ordem} - pág. ${pag}`;
-      doc.text(linha, x, y + lh * 0.72);
-      doc.link(x, y, larguraColuna, lh, { pageNumber: pag });
-      y += lh;
-    }
-    e.y = y;
   }
 
   // 11. Não lidos

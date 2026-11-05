@@ -10,7 +10,10 @@ import { carimboDataHora } from './relatorio/nome_arquivo.js';
 import { criarOverlay } from './overlay/overlay.js';
 
 function textoProgresso(p) {
-  if (p.fase === 'listagem') return { texto: 'Lendo a lista da caixa Triagem...', pct: 3 };
+  if (p.fase === 'listagem') {
+    const paginas = p.qtdPaginas ? ` (página ${p.paginasLidas} de ${p.qtdPaginas})` : '';
+    return { texto: `Lendo a lista da caixa Triagem${paginas}...`, pct: 2 + Math.round((p.paginasLidas / Math.max(1, p.qtdPaginas || 1)) * 3) };
+  }
   if (p.fase === 'repescagem') {
     return { texto: `Tentando de novo os que falharam: ${p.feitos + 1}/${p.total}`, pct: 96 };
   }
@@ -32,7 +35,21 @@ function baixarTexto(nome, texto) {
 }
 
 async function executar() {
-  const overlay = criarOverlay(document);
+  const overlay = criarOverlay(document, window);
+  // Relógio na tela: mostra que a página está viva mesmo quando o PJe demora a responder.
+  const inicio = Date.now();
+  let fase = 'listagem';
+  let tentativaLista = 1;
+  let erroLista = '';
+  const relogio = setInterval(() => {
+    const seg = Math.round((Date.now() - inicio) / 1000);
+    let extra = '';
+    if (fase === 'listagem') {
+      extra = seg >= 10 ? '\nO PJe está montando a lista; em caixas grandes isso pode levar alguns minutos.' : '';
+      if (tentativaLista > 1) extra += `\nTentativa ${tentativaLista} (a anterior falhou: ${erroLista}).`;
+    }
+    overlay.detalhe(`Tempo decorrido: ${seg} s${extra}`);
+  }, 1000);
   try {
     const xsrf = lerCookie(document.cookie, 'Xsrf-Token');
     if (!xsrf) throw new ErroSessao('Não encontrei a sessão do PJe nesta aba. Faça login no PJe e clique de novo.');
@@ -40,14 +57,21 @@ async function executar() {
     const coleta = await coletarTriagem({
       origin: location.origin,
       xsrf,
-      aoProgresso: p => { const { texto, pct } = textoProgresso(p); overlay.status(texto, pct); }
+      aoProgresso: p => {
+        fase = p.fase;
+        if (p.fase === 'listagem') { tentativaLista = p.tentativa || 1; erroLista = p.erro || ''; }
+        const { texto, pct } = textoProgresso(p);
+        overlay.status(texto, pct);
+      }
     });
 
     if (coleta.totalNaCaixa === 0) {
+      clearInterval(relogio);
       overlay.erro('A caixa Triagem desta Turma/Cadeira está vazia. Confira o órgão selecionado no PJe.');
       return;
     }
 
+    fase = 'pdf';
     overlay.status('Montando o PDF...', 97);
     await new Promise(r => setTimeout(r, 30)); // deixa a mensagem aparecer
     const geradoEm = new Date();
@@ -61,6 +85,7 @@ async function executar() {
       JsPDF: jsPDF
     });
     doc.save(rel.nomeArquivo);
+    clearInterval(relogio);
 
     const ndjson = coleta.registros.map(r => JSON.stringify(r)).join('\n') + '\n';
     overlay.concluir(
@@ -73,6 +98,7 @@ async function executar() {
       }
     );
   } catch (e) {
+    clearInterval(relogio);
     const texto = e instanceof ErroSessao ? e.message : `Algo deu errado: ${(e && e.message) || e}`;
     overlay.erro(texto);
   }

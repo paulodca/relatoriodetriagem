@@ -22,8 +22,9 @@ Entre no PJe 2º Grau com seu login, escolha a Turma/Cadeira certa e deixe a pá
 (qualquer tela do PJe serve).
 
 **3. Clique no botão**
-Clique em "Relatório de Triagem" na barra de favoritos. Uma caixinha no canto da tela mostra o
-andamento. **Não feche a aba.** Ao terminar, o PDF é baixado sozinho, com um nome como:
+Clique em "Relatório de Triagem" na barra de favoritos. Um aviso no centro da tela mostra o
+andamento e o tempo decorrido. **Não feche a aba nem mude de página** até o PDF baixar (pode
+usar outras abas e programas enquanto isso). Ao terminar, o PDF é baixado sozinho, com um nome como:
 
 ```
 relatorio_triagem_TRT2_9T-4C_2026-11-04_14h32.pdf
@@ -35,9 +36,9 @@ relatorio_triagem_TRT2_9T-4C_2026-11-04_14h32.pdf
 
 ## O que vem no PDF
 
-Resumo em números, alertas (Fazenda Pública sem MPT, processos físicos, sindicatos), lista por
-reclamada, lotes de processos parecidos e uma **ficha de cada processo**. Tem sumário
-clicável e índice por número de processo. Detalhes em
+Alertas (Fazenda Pública sem MPT, processos físicos, sindicatos), lista por reclamada, lotes
+de processos parecidos e uma **ficha de cada processo**. Tem sumário clicável e marcadores na
+barra lateral do leitor de PDF. Detalhes em
 [`documentacao/CONTEUDO_DO_RELATORIO.md`](documentacao/CONTEUDO_DO_RELATORIO.md).
 
 ## Quais processos entram

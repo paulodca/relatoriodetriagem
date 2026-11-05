@@ -3,11 +3,15 @@
  * Altere aqui (e não espalhado pelo código). Depois rode `npm run build`.
  */
 export const CONFIG = Object.freeze({
-  VERSAO: '1.0.0',
+  VERSAO: '1.1.0',
 
   // Caixa "Triagem" do Painel Global do PJe (mesmo ID no TRT1 e no TRT2).
   AGRUPAMENTO_TRIAGEM: 12,
-  TAMANHO_PAGINA_LISTAGEM: 500,
+  // A lista vem em páginas: a 1ª sozinha (diz quantas são), as demais em paralelo.
+  // Página grande (500) deixava o PJe muito tempo calado na 1ª resposta.
+  TAMANHO_PAGINA_LISTAGEM: 100,
+  // A lista é a consulta mais pesada do PJe: espera mais antes de desistir e tentar de novo.
+  TEMPO_LIMITE_LISTAGEM_MS: 120000,
 
   // true = só processos sem responsável (se nenhum estiver sem, entram todos).
   SOMENTE_SEM_RESPONSAVEL: true,
