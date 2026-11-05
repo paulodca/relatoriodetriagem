@@ -1,32 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { siglaOrgao, siglaDoLote, siglaTribunal, nomeArquivoRelatorio } from '../src/relatorio/nome_arquivo.js';
+import { nomeOrgaoLegivel, siglaTribunal, tribunalLegivel, dataHoraBR, nomeArquivoRelatorio, nomeArquivoDados } from '../src/relatorio/nome_arquivo.js';
 
-test('sigla do órgão julgador', () => {
-  assert.equal(siglaOrgao('9ª Turma - Cadeira 4'), '9T-4C');
-  assert.equal(siglaOrgao('17ª Turma - Cadeira 3'), '17T-3C');
-  assert.equal(siglaOrgao('9a Turma - Cadeira 1'), '9T-1C');
-  assert.equal(siglaOrgao('9ª Turma'), '9T');
-  assert.equal(siglaOrgao('Seção Especializada em Dissídios Individuais - 3'), 'Secao-Especializada-em-Dissidios-Individ');
-  assert.equal(siglaOrgao(''), 'semOJ');
-});
+const PROIBIDOS_WINDOWS = /[\\/:*?"<>|]/;
 
-test('sigla do lote: um órgão, vários, nenhum', () => {
-  assert.equal(siglaDoLote(['9ª Turma - Cadeira 4', '9ª Turma - Cadeira 4 ']), '9T-4C');
-  assert.equal(siglaDoLote(['9ª Turma - Cadeira 4', '9ª Turma - Cadeira 3']), 'variosOJ');
-  assert.equal(siglaDoLote([]), 'semOJ');
+test('órgão julgador por extenso, como o PJe escreve', () => {
+  assert.equal(nomeOrgaoLegivel(['9ª Turma - Cadeira 4', ' 9ª Turma -  Cadeira 4 ']), '9ª Turma - Cadeira 4');
+  assert.equal(nomeOrgaoLegivel(['9ª Turma - Cadeira 4', '9ª Turma - Cadeira 3']), 'Vários órgãos julgadores');
+  assert.equal(nomeOrgaoLegivel([]), 'Órgão julgador não identificado');
+  assert.doesNotMatch(nomeOrgaoLegivel(['SDI-1: Seção / Especializada']), PROIBIDOS_WINDOWS);
 });
 
 test('tribunal pelo endereço do PJe', () => {
   assert.equal(siglaTribunal('pje.trt2.jus.br'), 'TRT2');
-  assert.equal(siglaTribunal('pje.trt15.jus.br'), 'TRT15');
-  assert.equal(siglaTribunal('localhost'), 'LOCALHOST');
+  assert.equal(tribunalLegivel('pje.trt2.jus.br'), 'TRT-2');
+  assert.equal(tribunalLegivel('pje.trt15.jus.br'), 'TRT-15');
+  assert.equal(tribunalLegivel('localhost'), 'LOCALHOST');
 });
 
-test('nome completo, sem caracteres proibidos no Windows', () => {
-  const nome = nomeArquivoRelatorio({
-    hostname: 'pje.trt2.jus.br', descricoesOJ: ['9ª Turma - Cadeira 4'], data: new Date(2026, 0, 5, 8, 7)
-  });
-  assert.equal(nome, 'relatorio_triagem_TRT2_9T-4C_2026-01-05_08h07.pdf');
-  assert.doesNotMatch(nome, /[\\/:*?"<>|]/);
+test('data no padrão brasileiro DD-MM-AAAA', () => {
+  assert.equal(dataHoraBR(new Date(2026, 0, 5, 8, 7)), '05-01-2026 às 08h07');
+});
+
+test('nome completo legível, sem caracteres proibidos no Windows', () => {
+  const args = { hostname: 'pje.trt2.jus.br', descricoesOJ: ['9ª Turma - Cadeira 4'], data: new Date(2026, 10, 4, 22, 47) };
+  const nome = nomeArquivoRelatorio(args);
+  assert.equal(nome, 'Relatório de Triagem - 9ª Turma - Cadeira 4 (TRT-2) - 04-11-2026 às 22h47.pdf');
+  assert.doesNotMatch(nome, PROIBIDOS_WINDOWS);
+  assert.equal(nomeArquivoDados(args), 'Dados da Triagem - 9ª Turma - Cadeira 4 (TRT-2) - 04-11-2026 às 22h47.txt');
 });

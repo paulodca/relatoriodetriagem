@@ -6,7 +6,6 @@ import { jsPDF } from 'jspdf';
 import { CONFIG } from './config.js';
 import { coletarTriagem, lerCookie, ErroSessao } from './coleta/coletor.js';
 import { gerarRelatorio } from './relatorio/gerar.js';
-import { carimboDataHora } from './relatorio/nome_arquivo.js';
 import { criarOverlay } from './overlay/overlay.js';
 
 function textoProgresso(p) {
@@ -94,7 +93,7 @@ async function executar() {
       `\nArquivo: ${rel.nomeArquivo}`,
       {
         baixarDeNovo: () => doc.save(rel.nomeArquivo),
-        baixarDados: () => baixarTexto(`triagem_dados_${carimboDataHora(geradoEm)}.txt`, ndjson)
+        baixarDados: () => baixarTexto(rel.nomeArquivoDados, ndjson)
       }
     );
   } catch (e) {

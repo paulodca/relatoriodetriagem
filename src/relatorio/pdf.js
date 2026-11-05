@@ -2,7 +2,7 @@
  * Desenha o relatório (estrutura de dados_relatorio.js) em PDF com jsPDF.
  * Texto real e selecionável, formato "Rótulo: valor" (legível por pessoa e por IA).
  * Navegação: sumário clicável (pág. 2), marcadores na barra lateral, índice por CNJ e
- * "Nº de ordem" das listagens com link para a ficha.
+ * linha de cada processo nas listagens com link para a ficha.
  */
 
 const A4 = { largura: 210, altura: 297 };
@@ -168,11 +168,11 @@ export function gerarPdf(rel, JsPDF) {
   };
 
   /**
-   * Processo nas listagens, numa linha: "Nº de ordem: 12 | CNJ: ... | Classe: AP | Entrada: ..."
-   * seguido dos pares extras. O "Nº de ordem" vira link para a ficha.
+   * Processo nas listagens, numa linha: "CNJ: ... | Classe: AP | Entrada: ..."
+   * seguido dos pares extras. A linha inteira é link para a ficha.
    */
   const escreverLinhaProcesso = (lp, extras = [], { prefixo = '' } = {}) => {
-    const texto = [prefixo, `Nº de ordem: ${lp.ordem}`, `CNJ: ${lp.cnj}`, `Classe: ${lp.classe}`,
+    const texto = [prefixo, `CNJ: ${lp.cnj}`, `Classe: ${lp.classe}`,
       `Entrada: ${lp.entrada}`, ...extras.map(([r, v]) => `${r}: ${v}`)].filter(Boolean).join(' | ');
     const pos = e.texto(texto, { tam: 8.5 });
     if (pos) linksParaFicha.push({ pagina: pos.pagina, x: MARGEM_X, y: pos.y, w: LARGURA_UTIL, h: pos.altura, ordem: lp.ordem });
@@ -201,7 +201,7 @@ export function gerarPdf(rel, JsPDF) {
   e.espaco(1);
   [
     'O sumário (página 2) e os marcadores na barra lateral do leitor de PDF levam a cada seção.',
-    'Cada processo tem um "Nº de ordem" (ordem de entrada na triagem). Nas listagens, clique na linha do processo para abrir a ficha completa. Para achar um CNJ específico, use a busca do leitor de PDF (Ctrl+F).',
+    'Nas listagens, clique na linha do processo para abrir a ficha completa. Para achar um CNJ específico, use a busca do leitor de PDF (Ctrl+F).',
     'Um mesmo processo aparece em todas as seções a que pertence. O PDF pode ser enviado a uma IA para outras análises.',
     'Dados pessoais (CPF, e-mail, telefone, endereço) foram descartados. Em segredo de justiça, as partes aparecem como "SEGREDO DE JUSTIÇA".'
   ].forEach(t => e.texto('- ' + t, { tam: 9.5, recuo: 2 }));
@@ -259,7 +259,7 @@ export function gerarPdf(rel, JsPDF) {
 
   // 9. Fichas
   abrirSecao(`Ficha de cada processo (${rel.fichas.length})`);
-  e.texto('Em ordem de entrada na triagem (mais antigo primeiro).', { tam: 9, cor: COR_SUAVE });
+  e.texto('Em ordem de entrada na caixa Triagem: do que espera há mais tempo para o mais recente.', { tam: 9, cor: COR_SUAVE });
   e.espaco(3);
   const lhTituloFicha = alturaLinha(10.5);
   for (const f of rel.fichas) {
@@ -267,7 +267,7 @@ export function gerarPdf(rel, JsPDF) {
     if (altura <= BASE - TOPO) e.garantir(altura);
     else e.garantir(lhTituloFicha * 4);
     paginaFicha.set(f.ordem, e.pagina);
-    e.texto(`PROCESSO Nº DE ORDEM ${f.ordem} - ${f.cnj}`, { tam: 10.5, estilo: 'bold', cor: COR_TITULO });
+    e.texto(`PROCESSO ${f.cnj}`, { tam: 10.5, estilo: 'bold', cor: COR_TITULO });
     e.espaco(1);
     for (const l of f.linhas) e.pares(l);
     e.espaco(2);

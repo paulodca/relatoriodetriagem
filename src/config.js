@@ -3,7 +3,7 @@
  * Altere aqui (e não espalhado pelo código). Depois rode `npm run build`.
  */
 export const CONFIG = Object.freeze({
-  VERSAO: '1.1.0',
+  VERSAO: '1.2.0',
 
   // Caixa "Triagem" do Painel Global do PJe (mesmo ID no TRT1 e no TRT2).
   AGRUPAMENTO_TRIAGEM: 12,

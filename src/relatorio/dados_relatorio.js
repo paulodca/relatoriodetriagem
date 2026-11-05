@@ -1,7 +1,7 @@
 import { obterRotulosPolosContextuais } from '../motor/classificadores/partes_representantes.js';
 import { ROTA_TRIAGEM } from '../motor/classificadores/classes_trabalhistas.js';
 import { agruparPorReclamada, identificarLotes, trabalhadoresDoProcesso } from './reclamadas_lotes.js';
-import { nomeArquivoRelatorio, siglaTribunal } from './nome_arquivo.js';
+import { nomeArquivoRelatorio, nomeArquivoDados, siglaTribunal } from './nome_arquivo.js';
 
 /*
  * Transforma o lote já classificado (motor/hub_triagem.js) na estrutura das seções do PDF.
@@ -186,6 +186,7 @@ export function montarRelatorio({ processos, naoLidos = [], meta }) {
 
   return {
     nomeArquivo: nomeArquivoRelatorio({ hostname: meta.hostname, descricoesOJ, data: meta.geradoEm }),
+    nomeArquivoDados: nomeArquivoDados({ hostname: meta.hostname, descricoesOJ, data: meta.geradoEm }),
     capa: {
       tribunal,
       orgao: ojs.length ? ojs.join('; ') : 'não identificado',

@@ -68,7 +68,7 @@ const html = `<!DOCTYPE html>
   </li>
   <li><strong>No PJe</strong> (logado, com a Turma/Cadeira certa selecionada), clique no favorito
     "Relatório de Triagem". Não feche a aba. O PDF é baixado sozinho, com nome como
-    <code>relatorio_triagem_TRT2_9T-4C_2026-11-04_14h32.pdf</code>.</li>
+    <code>Relatório de Triagem - 9ª Turma - Cadeira 4 (TRT-2) - 04-11-2026 às 14h32.pdf</code>.</li>
 </ol>
 
 <div class="caixa">

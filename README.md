@@ -27,10 +27,10 @@ andamento e o tempo decorrido. **Não feche a aba nem mude de página** até o P
 usar outras abas e programas enquanto isso). Ao terminar, o PDF é baixado sozinho, com um nome como:
 
 ```
-relatorio_triagem_TRT2_9T-4C_2026-11-04_14h32.pdf
+Relatório de Triagem - 9ª Turma - Cadeira 4 (TRT-2) - 04-11-2026 às 14h32.pdf
 ```
 
-(tribunal, Turma e Cadeira, data e hora em que o relatório foi gerado)
+(órgão julgador, tribunal, dia e hora em que o relatório foi gerado)
 
 ---
 

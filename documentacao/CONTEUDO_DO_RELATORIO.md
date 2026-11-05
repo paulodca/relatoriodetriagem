@@ -23,9 +23,12 @@ primeiro e depois o código (`src/relatorio/`).
 - A4, fonte Helvetica.
 - Em todas as páginas: cabeçalho com tribunal, Turma/Cadeira e data/hora de geração; rodapé
   com `pág. X de Y`.
-- Nome do arquivo: `relatorio_triagem_<TRIBUNAL>_<OJ>_<AAAA-MM-DD>_<HHhMM>.pdf`.
-  - `<OJ>`: "9ª Turma - Cadeira 4" vira `9T-4C`. Se o texto do órgão não seguir esse padrão,
-    usa uma versão simplificada do nome; se o lote misturar órgãos, usa `variosOJ`.
+- Nome do arquivo, legível para qualquer usuário:
+  `Relatório de Triagem - <órgão julgador> (<tribunal>) - <DD-MM-AAAA> às <HH>h<MM>.pdf`,
+  ex.: `Relatório de Triagem - 9ª Turma - Cadeira 4 (TRT-2) - 04-11-2026 às 14h32.pdf`.
+  - `<órgão julgador>`: por extenso, como o PJe escreve (`descricaoOrgaoJulgador`). Se o lote
+    misturar órgãos: "Vários órgãos julgadores".
+  - Os dados brutos opcionais (.txt) seguem o mesmo padrão: `Dados da Triagem - ...`.
   - Hora local do computador, no momento em que o relatório foi gerado.
 
 ## Seções (nesta ordem)
@@ -57,7 +60,7 @@ Para cada um: `CNJ`, `Classe`, `Partes`, `Sindicato` e em qual polo.
 **ativo ou passivo**: no 2º grau a empresa muitas vezes é a recorrente (133 de 322 processos da
 amostra real). Filiais com a mesma raiz de CNPJ contam como a mesma reclamada.
 Só reclamadas com **2 ou mais processos**; quem tem mais vem primeiro, cada uma com **todos**
-os seus processos (`Nome`, `CNPJ(s)`, `Quantidade`; por processo: `Nº de ordem`, `CNJ`,
+os seus processos (`Nome`, `CNPJ(s)`, `Quantidade`; por processo: `CNJ`,
 `Classe`, `Entrada`, `Reclamante`).
 Processos em segredo de justiça não entram nesta seção (revelaria a empresa).
 
@@ -68,13 +71,14 @@ processos dela). O nome do advogado não aparece, só "mesmo cadastro de OAB". Q
 grupo de processos aparece por mais de uma reclamada ou OAB, vira um lote só, com todas as
 reclamadas no título. Segredo de justiça fica de fora.
 Para cada lote: `Lote nº`, `Reclamada(s)`, `Quantidade`, `Assuntos em comum` e a lista de
-processos (`Nº de ordem`, `CNJ`, `Classe`, `Entrada`, `Reclamante`).
+processos (`CNJ`, `Classe`, `Entrada`, `Reclamante`).
 
 ### 8. Ficha de cada processo
-Uma ficha por processo, em ordem de **entrada na triagem** (mais antigo primeiro). Campos
+Uma ficha por processo, em ordem de **entrada na caixa Triagem** (do que espera há mais tempo
+para o mais recente; não é a antiguidade do processo). Sem número de ordem (retirado em
+2026-11-04: confundia com antiguidade). Campos
 curtos ficam lado a lado na mesma linha, separados por `|`. Campos:
 
-- `Nº de ordem` (1, 2, 3...: o mesmo número usado nas listagens)
 - `CNJ`
 - `Classe` e `Fase` (Conhecimento/Execução)
 - `Entrada na triagem` (data e hora)

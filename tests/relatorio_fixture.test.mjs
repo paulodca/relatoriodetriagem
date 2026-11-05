@@ -28,7 +28,7 @@ test('PDF completo a partir da amostra real de 322 processos', { skip: SEM_DADOS
     JsPDF: jsPDF
   });
 
-  assert.equal(rel.nomeArquivo, 'relatorio_triagem_TRT2_9T-4C_2026-11-04_14h32.pdf');
+  assert.equal(rel.nomeArquivo, 'Relatório de Triagem - 9ª Turma - Cadeira 4 (TRT-2) - 04-11-2026 às 14h32.pdf');
   assert.equal(rel.fichas.length, 322);
   assert.equal(rel.indice, undefined, 'índice por CNJ foi retirado');
   assert.equal(rel.numeros, undefined, 'resumo em números foi retirado');
