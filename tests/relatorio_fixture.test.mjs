@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { jsPDF } from 'jspdf';
@@ -13,7 +12,9 @@ const DIR = path.dirname(fileURLToPath(import.meta.url));
 const DADOS_PATH = process.env.TRIAGEM_FIXTURE ||
   path.join(DIR, '..', '..', 'PROJETO_TRIAGEM', 'triagem_copy.json');
 const SEM_DADOS = !fs.existsSync(DADOS_PATH);
-export const SAIDA_PDF = process.env.TRIAGEM_PDF_SAIDA || path.join(os.tmpdir(), 'relatorio_triagem_fixture.pdf');
+// O PDF contém nomes reais: só é gravado em disco se um caminho for pedido explicitamente
+// (TRIAGEM_PDF_SAIDA). Sem isso, a conferência é feita só em memória.
+const SAIDA_PDF = process.env.TRIAGEM_PDF_SAIDA || null;
 
 test('PDF completo a partir da amostra real de 322 processos', { skip: SEM_DADOS && 'fixture real ausente' }, () => {
   const registros = fs.readFileSync(DADOS_PATH, 'utf8').split('\n').filter(Boolean)
@@ -65,10 +66,10 @@ test('PDF completo a partir da amostra real de 322 processos', { skip: SEM_DADOS
   assert.ok(rel.fazendaSemMpt.length >= 24);
 
   const bytes = Buffer.from(doc.output('arraybuffer'));
-  fs.writeFileSync(SAIDA_PDF, bytes);
+  if (SAIDA_PDF) fs.writeFileSync(SAIDA_PDF, bytes);
   const bruto = bytes.toString('latin1');
   assert.ok(doc.getNumberOfPages() > 20, 'PDF curto demais');
   assert.match(bruto, /\/Outlines/, 'sem marcadores');
   assert.ok((bruto.match(/\/Subtype \/Link/g) || []).length > 322, 'links internos insuficientes');
-  console.log(`PDF: ${SAIDA_PDF} (${doc.getNumberOfPages()} páginas, ${(bytes.length / 1024).toFixed(0)} KB)`);
+  console.log(`PDF: ${SAIDA_PDF || '(só em memória)'} (${doc.getNumberOfPages()} páginas, ${(bytes.length / 1024).toFixed(0)} KB)`);
 });
